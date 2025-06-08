@@ -20,13 +20,7 @@ const Index = () => {
   }
 
   return (
-    <AdminLayout
-      header={
-        <h2 className="text-xl font-tiltWrap leading-tight text-gray-800">
-          Lomba HAHAHA
-        </h2>
-      }
-    >
+    <AdminLayout>
       <Head title="Data lomba" />
 
       {flash?.success && (

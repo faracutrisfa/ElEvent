@@ -20,13 +20,7 @@ const Index = () => {
   }
 
   return (
-    <AdminLayout
-      header={
-        <h2 className="text-xl font-semibold leading-tight text-gray-800">
-          Beasiswa
-        </h2>
-      }
-    >
+    <AdminLayout>
       <Head title="Data Beasiswa" />
 
       {flash?.success && (
