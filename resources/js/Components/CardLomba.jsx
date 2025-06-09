@@ -33,11 +33,13 @@ const CardLomba = ({
     penyelenggara
   } = lomba;
 
+  const imageUrl = poster_lomba ? `/storage/${poster_lomba}` : null;
+
   return (
-    <div className={`bg-white rounded-2xl w-[646px] shadow-md p-5 overflow-hidden flex gap-5 ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-md p-5 overflow-hidden flex gap-5 ${className}`}>
       <div className="w-52 h-72 bg-cream-500 flex items-center justify-center overflow-hidden rounded-lg">
-        {poster_lomba ? (
-          <img src={poster_lomba} alt={judul} className="w-full h-full object-cover" />
+        {imageUrl ? (
+          <img src={imageUrl} alt={judul} className="w-full h-full object-cover" />
         ) : (
           <Icon icon="mdi:image" className="text-4xl text-gray-400" />
         )}

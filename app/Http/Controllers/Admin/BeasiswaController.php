@@ -14,13 +14,24 @@ class BeasiswaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $beasiswas = Beasiswa::latest()->get();
+        $searchQuery = $request->input('search');
+        $beasiswas = Beasiswa::latest();
+
+        if ($searchQuery) {
+            $beasiswas->where('judul', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('pemberi_beasiswa', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('tipe_pendaftaran', 'like', '%' . $searchQuery . '%')
+                    ->orWhere('jenjang_pendidikan', 'like', '%' . $searchQuery . '%');
+        }
+
+        $beasiswas = $beasiswas->get();
 
         return Inertia::render('Admin/Beasiswa/Index', [
             'beasiswas' => $beasiswas,
             'flash' => session('success'),
+            'filters' => ['search' => $searchQuery], 
         ]);
     }
 
@@ -29,7 +40,7 @@ class BeasiswaController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Beasiswa/Create');
+        return view('admin.beasiswa.create');
     }
 
     /**
@@ -48,16 +59,13 @@ class BeasiswaController extends Controller
             'poster_beasiswa' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $posterPath = null;
-        if ($request->hasFile('poster_beasiswa')) {
-            $posterPath = $request->file('poster_beasiswa')->store('posters/beasiswa', 'public');
-        }
+        $posterPath = $request->file('poster_beasiswa')->store('posters/beasiswa', 'public');
 
         Beasiswa::create([
             'judul' => $request->judul,
             'slug' => Str::slug($request->judul) . '-' . uniqid(),
-            'jenjang_pendidikan' => $request->jenjang_pendidikan,
-            'tipe_pendaftaran' => $request->tipe_pendaftaran,
+            'jenjang_pendidikan' => implode(',', $request->jenjang_pendidikan),
+            'tipe_pendaftaran' => implode(',', $request->tipe_pendaftaran),
             'syarat_penerima' => $request->syarat_penerima,
             'benefit' => $request->benefit,
             'tanggal_mulai' => $request->tanggal_mulai,
@@ -83,10 +91,10 @@ class BeasiswaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
         $beasiswa = Beasiswa::findOrFail($id);
-        return Inertia::render('Admin/Beasiswa/Edit', compact('beasiswa'));
+        return view('admin.beasiswa.edit', compact('beasiswa'));
     }
 
     /**
@@ -107,23 +115,20 @@ class BeasiswaController extends Controller
             'poster_beasiswa' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $slug = $request->judul !== $beasiswa->judul
-            ? Str::slug($request->judul) . '-' . uniqid()
-            : $beasiswa->slug;
-
-        $posterPath = $beasiswa->poster_beasiswa;
         if ($request->hasFile('poster_beasiswa')) {
-            if ($beasiswa->poster_beasiswa) {
+            if ($beasiswa->poster_beasiswa && Storage::disk('public')->exists($beasiswa->poster_beasiswa)) {
                 Storage::disk('public')->delete($beasiswa->poster_beasiswa);
             }
             $posterPath = $request->file('poster_beasiswa')->store('posters/beasiswa', 'public');
+        } else {
+            $posterPath = $beasiswa->poster_beasiswa;
         }
 
         $beasiswa->update([
             'judul' => $request->judul,
-            'slug' => $slug,
-            'jenjang_pendidikan' => $request->jenjang_pendidikan,
-            'tipe_pendaftaran' => $request->tipe_pendaftaran,
+            'slug' => Str::slug($request->judul) . '-' . uniqid(),
+            'jenjang_pendidikan' => implode(',', $request->jenjang_pendidikan),
+            'tipe_pendaftaran' => implode(',', $request->tipe_pendaftaran),
             'syarat_penerima' => $request->syarat_penerima,
             'benefit' => $request->benefit,
             'tanggal_mulai' => $request->tanggal_mulai,

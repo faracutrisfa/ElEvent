@@ -1,27 +1,55 @@
 import AdminLayout from '@/Layouts/AdminLayout'
 import { Head, usePage, router } from '@inertiajs/react'
-import PrimaryButton from '@/Components/PrimaryButton'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Icon } from '@iconify/react'
 import Create from './Create'
 import Edit from './Edit'
+import CardBeasiswa from '@/Components/CardBeasiswa'
+
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const Index = () => {
-  const { flash, beasiswas } = usePage().props
+  const { flash, beasiswas, filters } = usePage().props
   const [showCreate, setShowCreate] = useState(false)
   const [editBeasiswa, setEditBeasiswa] = useState(null)
+  const [searchQuery, setSearchQuery] = useState(filters.search || '');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useEffect(() => {
+    router.get(
+      route('admin.beasiswa.index'),
+      { search: debouncedSearchQuery },
+      {
+        preserveState: true,
+        replace: true,
+        only: ['beasiswas', 'filters'],
+      }
+    );
+  }, [debouncedSearchQuery]);
 
   const handleDelete = (id) => {
     if (confirm('Yakin ingin menghapus beasiswa ini?')) {
-      router.delete(route('admin.beasiswa.destroy', id), {
-        onSuccess: () => {
-        }
-      })
+      router.delete(route('admin.beasiswa.destroy', id))
     }
   }
 
   return (
     <AdminLayout>
-      <Head title="Data Beasiswa" />
+      <Head title="Data beasiswa" />
 
       {flash?.success && (
         <div className="mb-4 rounded bg-green-100 p-4 text-green-800">
@@ -29,78 +57,79 @@ const Index = () => {
         </div>
       )}
 
-      <div className="mb-4 flex justify-end">
-        <PrimaryButton onClick={() => setShowCreate(true)}>
-          Tambah Beasiswa
-        </PrimaryButton>
-      </div>
+      <main className="bg-cream-600 min-h-screen">
+        <div className='py-11 container'>
+          <div className="flex justify-between items-center gap-6 mb-9">
+            <div className="relative w-full ">
+              <Icon icon="mdi:magnify" className="absolute left-4 top-1/2 -translate-y-1/2 text-cream-900 text-lg" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari Beasiswa..."
+                className="w-full pl-10 pr-4 py-3 border border-cream-900 placeholder:text-cream-900 rounded-full"
+              />
+            </div>
 
-      <div className="space-y-4">
-        {beasiswas?.length > 0 ? (
-          beasiswas.map((b) => (
-            <div
-              key={b.id}
-              className="rounded border p-4 shadow-sm flex justify-between items-center"
+            <button
+              onClick={() => setShowCreate(true)}
+              className="bg-yellow-400 hover:bg-yellow-300 text-cream-1100 font-semibold rounded-full py-3 flex justify-center items-center gap-2 transition w-60"
             >
-              <div>
-                <h3 className="text-lg font-semibold">{b.judul}</h3>
-                <p className="text-sm text-gray-600">{b.pemberi_beasiswa}</p>
-                <p>
-                  {b.days_left === null
-                    ? 'Belum dibuka'
-                    : b.days_left === 'ditutup'
-                      ? 'Beasiswa sudah ditutup'
-                      : `${parseInt(b.days_left)} hari tersisa`}
-                </p>
-              </div>
+              <Icon icon="mdi:plus" className="text-xl" />
+              Tambah Beasiswa
+            </button>
+          </div>
 
-              <div className="flex gap-2">
-                <PrimaryButton onClick={() => setEditBeasiswa(b)}>
-                  Edit
-                </PrimaryButton>
+          <div className="grid grid-cols-2 gap-5">
+            {beasiswas?.length > 0 ? (
+              beasiswas.map((beasiswa) => (
+                <CardBeasiswa
+                  key={beasiswa.id}
+                  beasiswa={beasiswa}
+                  onEdit={setEditBeasiswa}
+                  onDelete={handleDelete}
+                  showActions={true}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Icon icon="mdi:database-search" className="text-6xl text-blue-300 mx-auto mb-4" />
+                <p className="text-blue-300 text-lg">Data beasiswa tidak ditemukan.</p>
+              </div>
+            )}
+          </div>
+
+          {showCreate && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-blue-600 rounded-3xl shadow-lg w-full max-w-3xl px-16 py-5 relative">
                 <button
-                  onClick={() => handleDelete(b.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                  onClick={() => setShowCreate(false)}
+                  className="absolute top-6 right-10 text-red-600 text-4xl"
+                  title="Tutup"
                 >
-                  Hapus
+                  &times;
                 </button>
+                <Create onClose={() => setShowCreate(false)} />
               </div>
             </div>
-          ))
-        ) : (
-          <p className="text-gray-500">Belum ada data beasiswa.</p>
-        )}
-      </div>
+          )}
 
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded shadow-lg w-full max-w-3xl p-6 relative">
-            <button
-              onClick={() => setShowCreate(false)}
-              className="absolute top-3 right-3 text-red-600 text-2xl font-bold"
-              title="Tutup"
-            >
-              &times;
-            </button>
-            <Create onClose={() => setShowCreate(false)} />
-          </div>
+          {editBeasiswa && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-blue-600 rounded-3xl shadow-lg w-full max-w-3xl px-16 py-5 relative">
+                <button
+                  onClick={() => setEditBeasiswa(null)}
+                  className="absolute top-6 right-10 text-red-600 text-4xl"
+                  title="Tutup"
+                >
+                  &times;
+                </button>
+                <Edit beasiswa={editBeasiswa} onClose={() => setEditBeasiswa(null)} />
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {editBeasiswa && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded shadow-lg w-full max-w-3xl p-6 relative">
-            <button
-              onClick={() => setEditBeasiswa(null)}
-              className="absolute top-3 right-3 text-red-600 text-2xl font-bold"
-              title="Tutup"
-            >
-              &times;
-            </button>
-            <Edit beasiswa={editBeasiswa} onClose={() => setEditBeasiswa(null)} />
-          </div>
-        </div>
-      )}
+      </main>
     </AdminLayout>
   )
 }

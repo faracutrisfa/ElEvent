@@ -50,12 +50,14 @@ const CardBeasiswa = ({
 
   const jenjangList = jenjang_pendidikan?.split(',') || []
 
+  const imageUrl = poster_beasiswa ? `/storage/${poster_beasiswa}` : null;
+
   return (
-    <div className={`bg-white rounded-2xl w-[646px] shadow-md p-5 overflow-hidden flex gap-5 ${className}`}>
+    <div className={`bg-white rounded-2xl shadow-md p-5 overflow-hidden flex gap-5 ${className}`}>
 
       <div className="w-52 h-44 bg-cream-500 flex items-center justify-center overflow-hidden rounded-lg">
-        {poster_beasiswa ? (
-          <img src={poster_beasiswa} alt={judul} className="w-full h-full object-cover" />
+        {imageUrl ? (
+          <img src={imageUrl} alt={judul} className="w-full h-full object-cover" />
         ) : (
           <Icon icon="mdi:image" className="text-4xl text-gray-400" />
         )}

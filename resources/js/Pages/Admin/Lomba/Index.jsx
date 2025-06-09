@@ -1,21 +1,49 @@
 import AdminLayout from '@/Layouts/AdminLayout'
 import { Head, usePage, router } from '@inertiajs/react'
-import PrimaryButton from '@/Components/PrimaryButton'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Icon } from '@iconify/react'
 import Create from './Create'
 import Edit from './Edit'
+import CardLomba from '@/Components/CardLomba'
+
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const Index = () => {
-  const { flash, lombas } = usePage().props
+  const { flash, lombas, filters } = usePage().props
   const [showCreate, setShowCreate] = useState(false)
   const [editLomba, setEditLomba] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  useEffect(() => {
+    router.get(
+      route('admin.lomba.index'),
+      { search: debouncedSearchQuery },
+      {
+        preserveState: true,
+        replace: true,
+        only: ['lombas', 'filters'],
+      }
+    );
+  }, [debouncedSearchQuery]);
 
   const handleDelete = (id) => {
     if (confirm('Yakin ingin menghapus lomba ini?')) {
-      router.delete(route('admin.lomba.destroy', id), {
-        onSuccess: () => {
-        }
-      })
+      router.delete(route('admin.lomba.destroy', id))
     }
   }
 
@@ -29,78 +57,79 @@ const Index = () => {
         </div>
       )}
 
-      <div className="mb-4 flex justify-end">
-        <PrimaryButton onClick={() => setShowCreate(true)}>
-          Tambah lomba
-        </PrimaryButton>
-      </div>
+      <main className="bg-cream-600 min-h-screen">
+        <div className='py-11 container'>
+          <div className="flex justify-between items-center gap-6 mb-9">
+            <div className="relative w-full ">
+              <Icon icon="mdi:magnify" className="absolute left-4 top-1/2 -translate-y-1/2 text-cream-900 text-lg" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari Lomba..."
+                className="w-full pl-10 pr-4 py-3 border border-cream-900 placeholder:text-cream-900 rounded-full"
+              />
+            </div>
 
-      <div className="space-y-4">
-        {lombas?.length > 0 ? (
-          lombas.map((b) => (
-            <div
-              key={b.id}
-              className="rounded border p-4 shadow-sm flex justify-between items-center"
+            <button
+              onClick={() => setShowCreate(true)}
+              className="bg-yellow-400 hover:bg-yellow-300 text-cream-1100 font-semibold rounded-full py-3 flex justify-center items-center gap-2 transition w-60"
             >
-              <div>
-                <h3 className="text-lg font-semibold">{b.judul}</h3>
-                <p className="text-sm text-gray-600">{b.penyelenggara}</p>
-                <p>
-                  {b.days_left === null
-                    ? 'Belum dibuka'
-                    : b.days_left === 'ditutup'
-                      ? 'lomba sudah ditutup'
-                      : `${parseInt(b.days_left)} hari tersisa`}
-                </p>
-              </div>
+              <Icon icon="mdi:plus" className="text-xl" />
+              Tambah Lomba
+            </button>
+          </div>
 
-              <div className="flex gap-2">
-                <PrimaryButton onClick={() => setEditLomba(b)}>
-                  Edit
-                </PrimaryButton>
+          <div className="grid grid-cols-2 gap-5">
+            {lombas?.length > 0 ? (
+              lombas.map((lomba) => (
+                <CardLomba
+                  key={lomba.id}
+                  lomba={lomba}
+                  onEdit={setEditLomba}
+                  onDelete={handleDelete}
+                  showActions={true}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Icon icon="mdi:database-search" className="text-6xl text-blue-300 mx-auto mb-4" />
+                <p className="text-blue-300 text-lg">Data lomba tidak ditemukan.</p>
+              </div>
+            )}
+          </div>
+
+          {showCreate && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-blue-600 rounded-3xl shadow-lg w-full max-w-3xl px-16 py-8 relative">
                 <button
-                  onClick={() => handleDelete(b.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                  onClick={() => setShowCreate(false)}
+                  className="absolute top-6 right-10 text-red-600 text-4xl"
+                  title="Tutup"
                 >
-                  Hapus
+                  &times;
                 </button>
+                <Create onClose={() => setShowCreate(false)} />
               </div>
             </div>
-          ))
-        ) : (
-          <p className="text-gray-500">Belum ada data lomba.</p>
-        )}
-      </div>
+          )}
 
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded shadow-lg w-full max-w-3xl p-6 relative">
-            <button
-              onClick={() => setShowCreate(false)}
-              className="absolute top-3 right-3 text-red-600 text-2xl font-bold"
-              title="Tutup"
-            >
-              &times;
-            </button>
-            <Create onClose={() => setShowCreate(false)} />
-          </div>
+          {editLomba && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-blue-600 rounded-3xl shadow-lg w-full max-w-3xl px-16 py-8 relative">
+                <button
+                  onClick={() => setEditLomba(null)}
+                  className="absolute top-6 right-10 text-red-600 text-4xl"
+                  title="Tutup"
+                >
+                  &times;
+                </button>
+                <Edit lomba={editLomba} onClose={() => setEditLomba(null)} />
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {editLomba && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded shadow-lg w-full max-w-3xl p-6 relative">
-            <button
-              onClick={() => setEditLomba(null)}
-              className="absolute top-3 right-3 text-red-600 text-2xl font-bold"
-              title="Tutup"
-            >
-              &times;
-            </button>
-            <Edit lomba={editLomba} onClose={() => setEditLomba(null)} />
-          </div>
-        </div>
-      )}
+      </main>
     </AdminLayout>
   )
 }
