@@ -16,7 +16,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
 Route::get('/lomba/{slug}', [HomeController::class, 'detailLomba'])->name('lomba.detail');
 Route::get('/beasiswa/{slug}', [HomeController::class, 'detailBeasiswa'])->name('beasiswa.detail');

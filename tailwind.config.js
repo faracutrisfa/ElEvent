@@ -75,10 +75,23 @@ export default {
                 },
             },
             backgroundImage: (theme) => ({
-                "gradasi": "linear-gradient(to right, #004AAD, #004AAD)",
+                gradasi: "linear-gradient(to bottom, #004AAD, #001E47)",
             }),
         },
     },
 
-    plugins: [forms],
+    plugins: [
+        forms,
+        function ({ addUtilities, theme }) {
+            const newUtilities = {
+                ".text-gradasi": {
+                    "background-image":
+                        "linear-gradient(to bottom, #004AAD, #001E47)",
+                    "background-clip": "text",
+                    "-webkit-text-fill-color": "transparent",
+                },
+            };
+            addUtilities(newUtilities, ["responsive", "hover"]);
+        },
+    ],
 };
