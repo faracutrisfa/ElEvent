@@ -90,6 +90,12 @@ export default {
                     "background-clip": "text",
                     "-webkit-text-fill-color": "transparent",
                 },
+                ".text-gradasi-yellow": {
+                    "background-image":
+                        "linear-gradient(to right, #FED755, #FEF5D4)",
+                    "background-clip": "text",
+                    "-webkit-text-fill-color": "transparent",
+                },
             };
             addUtilities(newUtilities, ["responsive", "hover"]);
         },

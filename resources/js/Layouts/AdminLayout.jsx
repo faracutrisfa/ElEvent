@@ -22,9 +22,11 @@ const AdminLayout = ({ children }) => {
     return (
         <section className="font-Lexend">
             <nav className="bg-blue-600 fixed w-full z-50">
-                <div className="container flex justify-between h-20 px-4">
+                <div className="container flex justify-between h-20 py-1 px-4">
                     <div className="flex gap-14">
-                        <ApplicationLogo variant="yellow" />
+                        <div className='flex items-center'>
+                            <ApplicationLogo variant="yellow" />
+                        </div>
                         <div className="hidden md:flex gap-14">
                             {navItems.map(({ label, routeName }) => (
                                 <NavLink

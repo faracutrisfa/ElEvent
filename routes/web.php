@@ -9,15 +9,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // PUBLIC ROUTES
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-})->name('home');
-
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/explore', [HomeController::class, 'explore'])->name('explore');
 Route::get('/lomba/{slug}', [HomeController::class, 'detailLomba'])->name('lomba.detail');
 Route::get('/beasiswa/{slug}', [HomeController::class, 'detailBeasiswa'])->name('beasiswa.detail');
 

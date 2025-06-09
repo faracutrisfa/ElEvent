@@ -1,5 +1,6 @@
 import React from 'react';
 import { Icon } from '@iconify/react';
+import { Link } from '@inertiajs/react';
 
 const formatDaysLeft = (daysLeft) => {
   if (daysLeft === null) return 'Belum dibuka';
@@ -30,19 +31,33 @@ const CardLomba = ({
     lokasi,
     tipe_lokasi,
     link_pendaftaran,
-    penyelenggara
+    penyelenggara,
+    id,
+    slug,
   } = lomba;
 
   const imageUrl = poster_lomba ? `/storage/${poster_lomba}` : null;
 
   return (
     <div className={`bg-white rounded-2xl shadow-md p-5 overflow-hidden flex gap-5 ${className}`}>
-      <div className="w-52 h-72 bg-cream-500 flex items-center justify-center overflow-hidden rounded-lg">
+
+      <div className="relative w-52 h-72 bg-cream-500 flex items-center justify-center overflow-hidden rounded-lg group">
         {imageUrl ? (
           <img src={imageUrl} alt={judul} className="w-full h-full object-cover" />
         ) : (
           <Icon icon="mdi:image" className="text-4xl text-gray-400" />
         )}
+
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end pb-2 justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Link
+            href={route('lomba.detail', slug)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-full font-semibold hover:bg-blue-700 transition flex items-center gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            More Details
+            <Icon icon="weui:arrow-filled" className="text-lg" />
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-1 justify-between">

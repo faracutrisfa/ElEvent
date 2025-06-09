@@ -12,12 +12,13 @@ export default function Dashboard() {
         >
             <Head title="Dashboard" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            You're logged in!
-                        </div>
+            <div className="py-12 bg-cream-500 min-h-screen">
+                <div className="flex flex-col items-center justify-center">
+                    <div className='font-extrabold text-4xl lg:text-6xl text-center w-1/2'>
+                        <p className='text-blue-700'>hi, admin</p>
+                        <p className='bg-mustard-400 rounded-lg p-2 -rotate-1'>
+                            <span className='text-gradasi'>Welcome Back!</span>
+                        </p>
                     </div>
                 </div>
             </div>
