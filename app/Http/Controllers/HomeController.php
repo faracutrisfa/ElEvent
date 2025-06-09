@@ -6,7 +6,7 @@ use App\Models\Lomba;
 use App\Models\Beasiswa;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Foundation\Application; 
+use Illuminate\Foundation\Application;
 
 class HomeController extends Controller
 {
@@ -32,42 +32,38 @@ class HomeController extends Controller
         $selectedTipeLokasi = $request->input('tipe_lokasi');
         $jenis = $request->input('jenis');
 
-        $kategoriOptions = ['Sains', 'Teknologi', 'Seni', 'Desain', 'Bisnis', 'Lingkungan', 'Sosial'];
+        $kategoriOptions = [
+            'Animasi', 'Artikel', 'Bahasa Asing', 'Bisnis', 'Debat', 'Desain', 'E-sport', 'Esai',
+            'Fotografi', 'Game Development', 'Hukum', 'Infografis', 'IT', 'Karya Tulis Ilmiah',
+            'Kewirausahaan', 'Lingkungan', 'Matematika', 'Musik', 'Mobile App Development',
+            'Olimpiade', 'Poster', 'Programmer', 'Puisi', 'Robotik', 'Sastra', 'Seni',
+            'Short Movie', 'Storytelling', 'Teknologi', 'UI/UX', 'Videografi', 'Web Development'
+        ];
         $jenjangOptions = ["SD", "SMP/MTS", "SMA/MA/SMK", "Mahasiswa"];
         $tipePendanaanOptions = ["Fully Funded", "Partially Funded"];
-        $tipeLokasiOptions = ['Nasional', 'Internasional', 'Provinsi A', 'Kota B'];
-
-        $applyCommonFilters = function ($query, $search, $jenjang, $tipeLokasi, $targetJenjangColumn) {
-            $query->when($search, function ($q, $s) {
-                $q->where('judul', 'like', '%' . $s . '%')
-                  ->orWhere('deskripsi', 'like', '%' . $s . '%'); 
-            });
-
-            $query->when($jenjang, function ($q, $j) use ($targetJenjangColumn) {
-                $jenjangArray = explode(',', $j);
-                if (!empty($jenjangArray)) {
-                    $q->where(function ($subQ) use ($jenjangArray, $targetJenjangColumn) {
-                        foreach ($jenjangArray as $item) {
-                            $subQ->orWhere($targetJenjangColumn, 'like', '%' . trim($item) . '%');
-                        }
-                    });
-                }
-            });
-
-            $query->when($tipeLokasi, function ($q, $tl) {
-                $tipeLokasiArray = explode(',', $tl);
-                if (!empty($tipeLokasiArray)) {
-                    $q->where(function ($subQ) use ($tipeLokasiArray) {
-                        foreach ($tipeLokasiArray as $item) {
-                            $subQ->orWhere('tipe_lokasi', 'like', '%' . trim($item) . '%');
-                        }
-                    });
-                }
-            });
-        };
-
+        $tipeLokasiOptions = ['Online', 'Offline', 'Hybrid'];
         $beasiswaQuery = Beasiswa::latest();
-        $applyCommonFilters($beasiswaQuery, $searchQuery, $selectedJenjang, $selectedTipeLokasi, 'jenjang_pendidikan');
+
+        $beasiswaQuery->when($searchQuery, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $search . '%')
+                  ->orWhere('pemberi_beasiswa', 'like', '%' . $search . '%')
+                  ->orWhere('syarat_penerima', 'like', '%' . $search . '%')
+                  ->orWhere('benefit', 'like', '%' . $search . '%');
+            });
+        });
+
+        $beasiswaQuery->when($selectedJenjang, function ($query, $jenjang) {
+            $jenjangArray = explode(',', $jenjang);
+            if (!empty($jenjangArray)) {
+                $query->where(function ($q) use ($jenjangArray) {
+                    foreach ($jenjangArray as $item) {
+                        $q->orWhere('jenjang_pendidikan', 'like', '%' . trim($item) . '%');
+                    }
+                });
+            }
+        });
 
         $beasiswaQuery->when($selectedTipePendanaan, function ($query, $tipe) {
             $tipeArray = explode(',', $tipe);
@@ -80,17 +76,16 @@ class HomeController extends Controller
             }
         });
 
-        $beasiswaQuery->when($searchQuery, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
-                $q->orWhere('pemberi_beasiswa', 'like', '%' . $search . '%')
-                  ->orWhere('syarat_penerima', 'like', '%' . $search . '%')
-                  ->orWhere('benefit', 'like', '%' . $search . '%');
-            });
-        });
-
         $allBeasiswa = $beasiswaQuery->get();
         $lombaQuery = Lomba::latest();
-        $applyCommonFilters($lombaQuery, $searchQuery, $selectedJenjang, $selectedTipeLokasi, 'jenjang_peserta');
+
+        $lombaQuery->when($searchQuery, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $search . '%')
+                  ->orWhere('penyelenggara', 'like', '%' . $search . '%');
+            });
+        });
 
         $lombaQuery->when($selectedKategori, function ($query, $kategori) {
             $kategoriArray = explode(',', $kategori);
@@ -103,8 +98,26 @@ class HomeController extends Controller
             }
         });
 
-        $lombaQuery->when($searchQuery, function ($query, $search) {
-            $query->where('penyelenggara', 'like', '%' . $search . '%');
+        $lombaQuery->when($selectedJenjang, function ($query, $jenjang) {
+            $jenjangArray = explode(',', $jenjang);
+            if (!empty($jenjangArray)) {
+                $query->where(function ($q) use ($jenjangArray) {
+                    foreach ($jenjangArray as $item) {
+                        $q->orWhere('jenjang_pendidikan', 'like', '%' . trim($item) . '%');
+                    }
+                });
+            }
+        });
+
+        $lombaQuery->when($selectedTipeLokasi, function ($query, $tipeLokasi) {
+            $tipeLokasiArray = explode(',', $tipeLokasi);
+            if (!empty($tipeLokasiArray)) {
+                $query->where(function ($q) use ($tipeLokasiArray) {
+                    foreach ($tipeLokasiArray as $item) {
+                        $q->orWhere('tipe_lokasi', 'like', '%' . trim($item) . '%');
+                    }
+                });
+            }
         });
 
         $allLomba = $lombaQuery->get();
